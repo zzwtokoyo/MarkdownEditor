@@ -1,10 +1,10 @@
 using MarkdownEditor.Controls;
+using MarkdownEditor.Helpers;
 using MarkdownEditor.Models;
 using MarkdownEditor.Services;
 using System;
 using System.Drawing;
 using System.IO;
-using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -146,7 +146,7 @@ namespace MarkdownEditor
 
         private void LoadRecentFiles()
         {
-            try
+            ExceptionHelper.TryExecute(() =>
             {
                 var recentFiles = _historyService.GetRecentFiles();
                 lstFiles.Items.Clear();
@@ -158,12 +158,7 @@ namespace MarkdownEditor
                 }
                 
                 UpdateStatusBar($"已加载 {recentFiles.Count} 个历史文件");
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"加载历史文件失败: {ex.Message}", "错误", 
-                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
-            }
+            }, "加载历史文件失败", MessageBoxIcon.Warning);
         }
 
         private void UpdateUI()
@@ -212,7 +207,7 @@ namespace MarkdownEditor
 
         private void LoadFile(string filePath)
         {
-            try
+            ExceptionHelper.TryExecute(() =>
             {
                 // 设置文件加载状态，禁用语法高亮
                 markdownEditor.SetFileLoadingState(true);
@@ -248,12 +243,7 @@ namespace MarkdownEditor
                 };
                 loadTimer.Start();
                 UpdateStatusBar($"已打开文件: {Path.GetFileName(filePath)}");
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"打开文件失败: {ex.Message}", "错误", 
-                    MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
+            }, "打开文件失败", MessageBoxIcon.Error);
         }
 
         private void SaveToolStripMenuItem_Click(object sender, EventArgs e)
@@ -269,7 +259,7 @@ namespace MarkdownEditor
                 return;
             }
 
-            try
+            ExceptionHelper.TryExecute(() =>
             {
                 _markdownService.SaveFileContent(_currentFilePath, markdownEditor.Text);
                 _isContentChanged = false;
@@ -277,12 +267,7 @@ namespace MarkdownEditor
                 LoadRecentFiles();
                 UpdateUI();
                 UpdateStatusBar($"已保存: {Path.GetFileName(_currentFilePath)}");
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"保存文件失败: {ex.Message}", "错误", 
-                    MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
+            }, "保存文件失败", MessageBoxIcon.Error);
         }
 
         private void SaveAsNewFile()
@@ -298,7 +283,7 @@ namespace MarkdownEditor
 
             if (saveFileDialog.ShowDialog() == DialogResult.OK)
             {
-                try
+                ExceptionHelper.TryExecute(() =>
                 {
                     _markdownService.SaveFileContent(saveFileDialog.FileName, markdownEditor.Text);
                     _currentFilePath = saveFileDialog.FileName;
@@ -311,12 +296,7 @@ namespace MarkdownEditor
                     LoadRecentFiles();
                     UpdateUI();
                     UpdateStatusBar($"已保存: {Path.GetFileName(_currentFilePath)}");
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show($"保存文件失败: {ex.Message}", "错误", 
-                        MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
+                }, "保存文件失败", MessageBoxIcon.Error);
             }
         }
 
@@ -460,17 +440,12 @@ namespace MarkdownEditor
                 return; // Skip save as for sync operation
             }
 
-            try
+            ExceptionHelper.TryExecuteSilent(() =>
             {
                 _markdownService.SaveFileContent(_currentFilePath, markdownEditor.Text);
                 _isContentChanged = false;
                 _historyService.AddOrUpdateFile(_currentFilePath);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"保存文件失败: {ex.Message}", "错误", 
-                    MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
+            }, "保存文件");
         }
         
         private void SyntaxHighlightingToolStripMenuItem_Click(object sender, EventArgs e)

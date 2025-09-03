@@ -3,7 +3,6 @@ using System.Drawing;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
@@ -61,6 +60,34 @@ namespace MarkdownEditor.Controls
             public int Length { get; set; }
             public Color Color { get; set; }
             public FontStyle Style { get; set; }
+        }
+        
+        // 选择状态结构
+        private struct SelectionState
+        {
+            public int Start { get; set; }
+            public int Length { get; set; }
+        }
+        
+        /// <summary>
+        /// 保存当前选择状态
+        /// </summary>
+        private SelectionState SaveSelectionState()
+        {
+            return new SelectionState
+            {
+                Start = this.SelectionStart,
+                Length = this.SelectionLength
+            };
+        }
+        
+        /// <summary>
+        /// 恢复选择状态
+        /// </summary>
+        private void RestoreSelectionState(SelectionState state)
+        {
+            this.SelectionStart = state.Start;
+            this.SelectionLength = state.Length;
         }
 
         public MarkdownRichTextBox()
@@ -338,8 +365,8 @@ namespace MarkdownEditor.Controls
             try
             {
                 // 保存当前状态和滚动位置 - 增强保护机制
-                int originalStart = this.SelectionStart;
-                int originalLength = this.SelectionLength;
+// 保存当前状态
+                var originalSelection = SaveSelectionState();
                 int originalScrollPos = this.GetCharIndexFromPosition(new Point(0, 0));
                 Point originalScrollPoint = new Point(0, 0);
                 int originalFirstVisibleLine = this.GetLineFromCharIndex(originalScrollPos);
@@ -376,9 +403,8 @@ namespace MarkdownEditor.Controls
                 // 恢复滚动条
                 this.ScrollBars = originalScrollBars;
                 
-                // 最后一次性恢复选择和滚动位置
-                this.SelectionStart = originalStart;
-                this.SelectionLength = originalLength;
+                // 恢复原始状态
+                RestoreSelectionState(originalSelection);
                 
                 // 增强的滚动位置恢复机制
                 int currentScrollPos = this.GetCharIndexFromPosition(new Point(0, 0));
@@ -400,12 +426,10 @@ namespace MarkdownEditor.Controls
                                     int targetCharIndex = this.GetFirstCharIndexFromLine(originalFirstVisibleLine);
                                     if (targetCharIndex >= 0)
                                     {
-                                        int tempSelection = this.SelectionStart;
-                                        int tempLength = this.SelectionLength;
+                                        var tempSelection = SaveSelectionState();
                                         this.SelectionStart = targetCharIndex;
                                         this.ScrollToCaret();
-                                        this.SelectionStart = tempSelection;
-                                        this.SelectionLength = tempLength;
+                                        RestoreSelectionState(tempSelection);
                                     }
                                 }
                                 catch
@@ -443,42 +467,20 @@ namespace MarkdownEditor.Controls
 
             _updating = true;
             
-            // 只保存选择状态，不保存滚动位置
-            int selectionStart = this.SelectionStart;
-            int selectionLength = this.SelectionLength;
+            // 保存当前状态
+            var originalSelection = SaveSelectionState();
 
             try
             {
-                // 使用更高效的区域更新策略
-                ApplySmartSyntaxHighlighting();
+                // 使用更轻量级的格式重置方法
+                // 避免大范围的Select操作，减少滚动干扰
+                this.SelectionStart = 0;
+                this.SelectionLength = this.Text.Length;
+                this.SelectionColor = _syntaxStyles["normal"].color;
+                this.SelectionFont = this.Font;
                 
-                // 更新缓存
-                _lastTextLength = this.Text.Length;
-                _lastProcessedText = this.Text;
-            }
-            finally
-            {
-                // 只恢复选择状态，不恢复滚动位置
-                this.Select(selectionStart, selectionLength);
-                _updating = false;
-            }
-        }
-        
-        private void ApplySmartSyntaxHighlighting()
-        {
-            // 保存当前选择状态
-            int originalStart = this.SelectionStart;
-            int originalLength = this.SelectionLength;
-            
-            // 使用更轻量级的格式重置方法
-            // 避免大范围的Select操作，减少滚动干扰
-            this.SelectionStart = 0;
-            this.SelectionLength = this.Text.Length;
-            this.SelectionColor = _syntaxStyles["normal"].color;
-            this.SelectionFont = this.Font;
-            
-            // 立即恢复原始选择，减少视觉干扰
-            this.Select(originalStart, originalLength);
+                // 立即恢复原始选择，减少视觉干扰
+                RestoreSelectionState(originalSelection);
             
             // 按优先级应用语法高亮（避免重叠）
             var patterns = new List<(string pattern, string style, RegexOptions options)>
@@ -514,10 +516,21 @@ namespace MarkdownEditor.Controls
                 (@"^[\s]*\d+\.\s+(.*)$", "list", RegexOptions.Multiline)
             };
             
-            // 应用每个模式
-            foreach (var (pattern, style, options) in patterns)
+                // 应用每个模式
+                foreach (var (pattern, style, options) in patterns)
+                {
+                    ApplyPatternSafely(pattern, style, options);
+                }
+                
+                // 更新缓存
+                _lastTextLength = this.Text.Length;
+                _lastProcessedText = this.Text;
+            }
+            finally
             {
-                ApplyPatternSafely(pattern, style, options);
+                // 恢复原始选择状态
+                RestoreSelectionState(originalSelection);
+                _updating = false;
             }
         }
         
@@ -667,14 +680,7 @@ namespace MarkdownEditor.Controls
             }
         }
 
-        /// <summary>
-        /// 启用或禁用语法高亮
-        /// </summary>
-        /// <param name="enabled">是否启用</param>
-        public void SetSyntaxHighlightingEnabled(bool enabled)
-        {
-            SyntaxHighlightingEnabled = enabled;
-        }
+
         
         /// <summary>
         /// 清除所有语法高亮格式
@@ -695,8 +701,7 @@ namespace MarkdownEditor.Controls
             try
             {
                 // 保存当前状态
-                int originalStart = this.SelectionStart;
-                int originalLength = this.SelectionLength;
+                var originalSelection = SaveSelectionState();
                 
                 // 禁用重绘
                 this.SuspendLayout();
@@ -711,9 +716,8 @@ namespace MarkdownEditor.Controls
                 this.SelectionColor = _syntaxStyles["normal"].color;
                 this.SelectionFont = this.Font;
                 
-                // 恢复选择状态
-                this.SelectionStart = originalStart;
-                this.SelectionLength = originalLength;
+                // 恢复原始状态
+                RestoreSelectionState(originalSelection);
             }
             finally
             {
