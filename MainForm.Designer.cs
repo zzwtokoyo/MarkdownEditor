@@ -10,13 +10,15 @@ namespace MarkdownEditor
         private System.Windows.Forms.ToolStripMenuItem saveAsToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
         private System.Windows.Forms.ToolStripMenuItem exitToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem viewToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem syntaxHighlightingToolStripMenuItem;
         private System.Windows.Forms.SplitContainer splitContainer1;
         private System.Windows.Forms.Panel leftPanel;
         private System.Windows.Forms.Label lblFileList;
         private System.Windows.Forms.ListBox lstFiles;
         private System.Windows.Forms.Panel rightPanel;
         private System.Windows.Forms.SplitContainer splitContainer2;
-        private System.Windows.Forms.TextBox txtEditor;
+
         private MarkdownEditor.Controls.MarkdownRichTextBox markdownEditor;
         private MarkdownEditor.Controls.MarkdownToolBar markdownToolBar;
         private Microsoft.Web.WebView2.WinForms.WebView2 webView2Preview;
@@ -33,6 +35,8 @@ namespace MarkdownEditor
             this.saveAsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.viewToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.syntaxHighlightingToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.leftPanel = new System.Windows.Forms.Panel();
             this.lstFiles = new System.Windows.Forms.ListBox();
@@ -41,7 +45,7 @@ namespace MarkdownEditor
             this.splitContainer2 = new System.Windows.Forms.SplitContainer();
             this.markdownToolBar = new MarkdownEditor.Controls.MarkdownToolBar();
             this.markdownEditor = new MarkdownEditor.Controls.MarkdownRichTextBox();
-            this.txtEditor = new System.Windows.Forms.TextBox();
+
             this.webView2Preview = new Microsoft.Web.WebView2.WinForms.WebView2();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
@@ -65,7 +69,8 @@ namespace MarkdownEditor
             // menuStrip1
             // 
             this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.fileToolStripMenuItem});
+            this.fileToolStripMenuItem,
+            this.viewToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
             this.menuStrip1.Size = new System.Drawing.Size(1200, 24);
@@ -124,6 +129,25 @@ namespace MarkdownEditor
             this.exitToolStripMenuItem.Size = new System.Drawing.Size(150, 22);
             this.exitToolStripMenuItem.Text = "退出(&X)";
             this.exitToolStripMenuItem.Click += new System.EventHandler(this.ExitToolStripMenuItem_Click);
+            
+            // 
+            // viewToolStripMenuItem
+            // 
+            this.viewToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.syntaxHighlightingToolStripMenuItem});
+            this.viewToolStripMenuItem.Name = "viewToolStripMenuItem";
+            this.viewToolStripMenuItem.Size = new System.Drawing.Size(58, 20);
+            this.viewToolStripMenuItem.Text = "视图(&V)";
+            
+            // 
+            // syntaxHighlightingToolStripMenuItem
+            // 
+            this.syntaxHighlightingToolStripMenuItem.Checked = true;
+            this.syntaxHighlightingToolStripMenuItem.CheckOnClick = true;
+            this.syntaxHighlightingToolStripMenuItem.Name = "syntaxHighlightingToolStripMenuItem";
+            this.syntaxHighlightingToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.syntaxHighlightingToolStripMenuItem.Text = "语法高亮(&S)";
+            this.syntaxHighlightingToolStripMenuItem.Click += new System.EventHandler(this.SyntaxHighlightingToolStripMenuItem_Click);
             
             // 
             // splitContainer1
@@ -233,19 +257,7 @@ namespace MarkdownEditor
             this.markdownEditor.TabIndex = 0;
             this.markdownEditor.Text = "";
             
-            // 
-            // txtEditor
-            // 
-            this.txtEditor.AcceptsReturn = true;
-            this.txtEditor.AcceptsTab = true;
-            this.txtEditor.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.txtEditor.Font = new System.Drawing.Font("Consolas", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.txtEditor.Location = new System.Drawing.Point(0, 0);
-            this.txtEditor.Multiline = true;
-            this.txtEditor.Name = "txtEditor";
-            this.txtEditor.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.txtEditor.Size = new System.Drawing.Size(448, 704);
-            this.txtEditor.TabIndex = 0;
+
             
             // 
             // webView2Preview

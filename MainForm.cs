@@ -5,6 +5,7 @@ using System;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -15,6 +16,7 @@ namespace MarkdownEditor
         private readonly HistoryService _historyService;
         private readonly MarkdownService _markdownService;
         private readonly AutoSaveService _autoSaveService;
+        private readonly ConfigurationService _configurationService;
         private string? _currentFilePath;
         private bool _isContentChanged;
         private System.Windows.Forms.Timer _previewTimer;
@@ -39,13 +41,17 @@ namespace MarkdownEditor
             _historyService = new HistoryService();
             _markdownService = new MarkdownService();
             _autoSaveService = new AutoSaveService(30); // 30秒自动保存间隔
+            _configurationService = new ConfigurationService();
             _previewTimer = new System.Windows.Forms.Timer();
-            _previewTimer.Interval = 500; // 500ms delay for preview update
+            _previewTimer.Interval = 500; // 进一步减少频繁更新和滚动
             _previewTimer.Tick += PreviewTimer_Tick;
             
             LoadRecentFiles();
             UpdateUI();
             SetupEventHandlers();
+            
+            // 加载语法高亮设置
+            LoadSyntaxHighlightingSettings();
             
             // Initialize WebView2 when form is loaded
             this.Load += MainForm_Load;
@@ -93,7 +99,7 @@ namespace MarkdownEditor
             // 通知自动保存服务
             _autoSaveService.MarkContentChanged();
             
-            // Restart the timer for preview update
+            // 使用防抖机制，避免频繁更新预览
             _previewTimer.Stop();
             _previewTimer.Start();
         }
@@ -119,9 +125,17 @@ namespace MarkdownEditor
             {
                 await webView2Preview.EnsureCoreWebView2Async(null);
                 
+                // 重置初始化标志
+                _isWebViewInitialized = false;
+                
                 // Initial empty content
                 webView2Preview.CoreWebView2.NavigateToString(
                     _markdownService.ConvertToHtml("# 欢迎使用 Markdown 编辑器\n\n请选择或打开一个 Markdown 文件开始编辑。"));
+                
+                // 等待页面加载完成后再标记为已初始化
+                webView2Preview.CoreWebView2.NavigationCompleted += (sender, args) => {
+                    _isWebViewInitialized = true;
+                };
             }
             catch (Exception ex)
             {
@@ -172,7 +186,7 @@ namespace MarkdownEditor
             lblStatus.Text = message;
         }
 
-        private async void OpenToolStripMenuItem_Click(object sender, EventArgs e)
+        private void OpenToolStripMenuItem_Click(object sender, EventArgs e)
         {
             if (_isContentChanged)
             {
@@ -180,7 +194,7 @@ namespace MarkdownEditor
                     MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question);
                 
                 if (result == DialogResult.Cancel) return;
-                if (result == DialogResult.Yes) await SaveCurrentFile();
+                if (result == DialogResult.Yes) SaveCurrentFile();
             }
 
             using var openFileDialog = new OpenFileDialog
@@ -192,16 +206,24 @@ namespace MarkdownEditor
 
             if (openFileDialog.ShowDialog() == DialogResult.OK)
             {
-                await LoadFile(openFileDialog.FileName);
+                LoadFile(openFileDialog.FileName);
             }
         }
 
-        private async Task LoadFile(string filePath)
+        private void LoadFile(string filePath)
         {
             try
             {
+                // 设置文件加载状态，禁用语法高亮
+                markdownEditor.SetFileLoadingState(true);
+                
                 var content = _markdownService.LoadFileContent(filePath);
+                
+                // 临时禁用TextChanged事件，避免加载文件时触发预览更新
+                markdownEditor.TextChanged -= MarkdownEditor_TextChanged;
                 markdownEditor.Text = content;
+                markdownEditor.TextChanged += MarkdownEditor_TextChanged;
+                
                 _currentFilePath = filePath;
                 _isContentChanged = false;
                 
@@ -212,7 +234,19 @@ namespace MarkdownEditor
                 // 启动自动保存
                 _autoSaveService.StartAutoSave(filePath, () => markdownEditor.Text);
                 
-                await UpdatePreview();
+                // 恢复语法高亮状态（延迟启动）
+                markdownEditor.SetFileLoadingState(false);
+                
+                // 延迟更新预览，确保WebView2完全准备好，避免滚动问题
+                _previewTimer.Stop(); // 停止任何正在进行的预览更新
+                System.Windows.Forms.Timer loadTimer = new System.Windows.Forms.Timer();
+                loadTimer.Interval = 500; // 增加延迟到500ms
+                loadTimer.Tick += (s, e) => {
+                    loadTimer.Stop();
+                    loadTimer.Dispose();
+                    UpdatePreview();
+                };
+                loadTimer.Start();
                 UpdateStatusBar($"已打开文件: {Path.GetFileName(filePath)}");
             }
             catch (Exception ex)
@@ -222,16 +256,16 @@ namespace MarkdownEditor
             }
         }
 
-        private async void SaveToolStripMenuItem_Click(object sender, EventArgs e)
+        private void SaveToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            await SaveCurrentFile();
+            SaveCurrentFile();
         }
 
-        private async Task SaveCurrentFile()
+        private void SaveCurrentFile()
         {
             if (string.IsNullOrEmpty(_currentFilePath))
             {
-                await SaveAsNewFile();
+                SaveAsNewFile();
                 return;
             }
 
@@ -251,7 +285,7 @@ namespace MarkdownEditor
             }
         }
 
-        private async Task SaveAsNewFile()
+        private void SaveAsNewFile()
         {
             using var saveFileDialog = new SaveFileDialog
             {
@@ -286,9 +320,9 @@ namespace MarkdownEditor
             }
         }
 
-        private async void SaveAsToolStripMenuItem_Click(object sender, EventArgs e)
+        private void SaveAsToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            await SaveAsNewFile();
+            SaveAsNewFile();
         }
 
         private void ExitToolStripMenuItem_Click(object sender, EventArgs e)
@@ -296,7 +330,7 @@ namespace MarkdownEditor
             this.Close();
         }
 
-        private async void LstFiles_SelectedIndexChanged(object sender, EventArgs e)
+        private void LstFiles_SelectedIndexChanged(object sender, EventArgs e)
         {
             if (lstFiles.SelectedItem is FileListItem selectedItem)
             {
@@ -312,32 +346,88 @@ namespace MarkdownEditor
                     }
                     if (result == DialogResult.Yes) 
                     {
-                        await SaveCurrentFile();
+                        SaveCurrentFile();
                     }
                 }
 
-                await LoadFile(selectedItem.FileRecord.FilePath);
+                LoadFile(selectedItem.FileRecord.FilePath);
             }
         }
 
-        private async void PreviewTimer_Tick(object? sender, EventArgs e)
+        private void PreviewTimer_Tick(object? sender, EventArgs e)
         {
             _previewTimer.Stop();
-            await UpdatePreview();
+            UpdatePreview();
         }
 
-        private Task UpdatePreview()
+        private bool _isWebViewInitialized = false;
+        
+        private void UpdatePreview()
         {
             try
             {
-                var html = _markdownService.ConvertToHtml(markdownEditor.Text);
-                webView2Preview.CoreWebView2.NavigateToString(html);
-                return Task.CompletedTask;
+                if (webView2Preview.CoreWebView2 == null)
+                    return;
+                
+                // 保存编辑器的滚动状态，确保预览更新不影响编辑器
+                var editorScrollPos = markdownEditor.GetCharIndexFromPosition(new Point(0, 0));
+                var editorSelectionStart = markdownEditor.SelectionStart;
+                var editorSelectionLength = markdownEditor.SelectionLength;
+                
+                // 如果是第一次更新或者WebView还没有初始化完成，使用NavigateToString
+                if (!_isWebViewInitialized)
+                {
+                    var fullHtml = _markdownService.ConvertToHtml(markdownEditor.Text);
+                    webView2Preview.CoreWebView2.NavigateToString(fullHtml);
+                    // 注意：_isWebViewInitialized 将在NavigationCompleted事件中设置为true
+                }
+                else
+                {
+                    // 使用JavaScript动态更新内容，避免页面刷新
+                    var bodyHtml = _markdownService.ConvertToHtmlBody(markdownEditor.Text);
+                    
+                    // 改进的HTML转义处理，避免JSON解析错误
+                    var escapedHtml = JsonSerializer.Serialize(bodyHtml);
+                    
+                    // 使用更安全的消息格式
+                    var message = $"{{\"action\": \"updateContent\", \"html\": {escapedHtml}}}";
+                    webView2Preview.CoreWebView2.PostWebMessageAsJson(message);
+                }
+                
+                // 确保编辑器的滚动状态和选择状态不受预览更新影响
+                // 使用BeginInvoke确保在UI线程上异步执行，避免阻塞
+                this.BeginInvoke(new Action(() => {
+                    try
+                    {
+                        // 只有在状态发生变化时才恢复，避免不必要的操作
+                        if (markdownEditor.SelectionStart != editorSelectionStart || 
+                            markdownEditor.SelectionLength != editorSelectionLength)
+                        {
+                            markdownEditor.SelectionStart = editorSelectionStart;
+                            markdownEditor.SelectionLength = editorSelectionLength;
+                        }
+                        
+                        var currentScrollPos = markdownEditor.GetCharIndexFromPosition(new Point(0, 0));
+                        if (Math.Abs(currentScrollPos - editorScrollPos) > 5)
+                        {
+                            markdownEditor.Select(editorScrollPos, 0);
+                            markdownEditor.ScrollToCaret();
+                            // 恢复原始选择
+                            markdownEditor.SelectionStart = editorSelectionStart;
+                            markdownEditor.SelectionLength = editorSelectionLength;
+                        }
+                    }
+                    catch
+                    {
+                        // 忽略恢复过程中的任何错误，避免影响主要功能
+                    }
+                }));
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Preview update failed: {ex.Message}");
-                return Task.CompletedTask;
+                // 发生错误时不进行回退刷新，避免不必要的页面重载
+                // 用户可以通过重新打开文件来恢复预览
             }
         }
 
@@ -383,10 +473,39 @@ namespace MarkdownEditor
             }
         }
         
+        private void SyntaxHighlightingToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var menuItem = sender as ToolStripMenuItem;
+            if (menuItem != null)
+            {
+                // 切换语法高亮状态
+                markdownEditor.SyntaxHighlightingEnabled = menuItem.Checked;
+                
+                // 保存设置
+                _configurationService.SetSetting("SyntaxHighlightingEnabled", menuItem.Checked);
+            }
+        }
+        
+        /// <summary>
+        /// 加载语法高亮设置
+        /// </summary>
+        private void LoadSyntaxHighlightingSettings()
+        {
+            // 从配置文件加载语法高亮设置，默认为启用
+            bool syntaxHighlightingEnabled = _configurationService.GetSetting("SyntaxHighlightingEnabled", true);
+            
+            // 设置编辑器的语法高亮状态
+            markdownEditor.SyntaxHighlightingEnabled = syntaxHighlightingEnabled;
+            
+            // 更新菜单项的选中状态
+            syntaxHighlightingToolStripMenuItem.Checked = syntaxHighlightingEnabled;
+        }
+        
         protected override void Dispose(bool disposing)
         {
             if (disposing)
             {
+                components?.Dispose();
                 _autoSaveService?.Dispose();
                 _previewTimer?.Dispose();
             }
