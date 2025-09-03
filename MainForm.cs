@@ -25,6 +25,17 @@ namespace MarkdownEditor
             SetProcessDpiAwareness();
             
             InitializeComponent();
+            
+            // 设置窗体图标
+            try
+            {
+                this.Icon = new Icon("icon.ico");
+            }
+            catch
+            {
+                // 如果图标文件不存在，忽略错误
+            }
+            
             _historyService = new HistoryService();
             _markdownService = new MarkdownService();
             _autoSaveService = new AutoSaveService(30); // 30秒自动保存间隔

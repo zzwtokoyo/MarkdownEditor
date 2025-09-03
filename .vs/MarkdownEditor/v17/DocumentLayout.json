@@ -3,8 +3,8 @@
   "WorkspaceRootPath": "E:\\Learning\\MarkdownEditor\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{3E578417-ACEE-4080-82CB-4B7D6DDD97AB}|MarkdownEditor.csproj|e:\\learning\\markdowneditor\\markdowneditor.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|",
-      "RelativeMoniker": "D:0:0:{3E578417-ACEE-4080-82CB-4B7D6DDD97AB}|MarkdownEditor.csproj|solutionrelative:markdowneditor.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|"
+      "AbsoluteMoniker": "D:0:0:{A6B1FF0E-6C93-4AA7-B9B5-5E35C63C1177}|MarkdownEditor.csproj|e:\\learning\\markdowneditor\\markdowneditor.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|",
+      "RelativeMoniker": "D:0:0:{A6B1FF0E-6C93-4AA7-B9B5-5E35C63C1177}|MarkdownEditor.csproj|solutionrelative:markdowneditor.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|"
     }
   ],
   "DocumentGroupContainers": [
@@ -19,12 +19,12 @@
             {
               "$type": "Document",
               "DocumentIndex": 0,
-              "Title": "MarkdownEditor",
+              "Title": "MarkdownEditor.csproj",
               "DocumentMoniker": "E:\\Learning\\MarkdownEditor\\MarkdownEditor.csproj",
               "RelativeDocumentMoniker": "MarkdownEditor.csproj",
               "ToolTip": "E:\\Learning\\MarkdownEditor\\MarkdownEditor.csproj",
               "RelativeToolTip": "MarkdownEditor.csproj",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABcAAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABEAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000758|",
               "WhenOpened": "2025-09-02T15:35:04.372Z",
               "EditorCaption": ""

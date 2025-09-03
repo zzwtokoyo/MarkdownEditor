@@ -22,3 +22,4 @@ E:\Learning\MarkdownEditor\obj\Debug\net8.0-windows\refint\MarkdownEditor.dll
 E:\Learning\MarkdownEditor\obj\Debug\net8.0-windows\MarkdownEditor.pdb
 E:\Learning\MarkdownEditor\obj\Debug\net8.0-windows\MarkdownEditor.genruntimeconfig.cache
 E:\Learning\MarkdownEditor\obj\Debug\net8.0-windows\ref\MarkdownEditor.dll
+E:\Learning\MarkdownEditor\obj\Debug\net8.0-windows\MarkdownEditor.sourcelink.json

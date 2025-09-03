@@ -10,12 +10,12 @@
 using System;
 using System.Reflection;
 
-[assembly: System.Reflection.AssemblyCompanyAttribute("MarkdownEditor")]
+[assembly: System.Reflection.AssemblyCompanyAttribute("IconGenerator")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
 [assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+737a7c032096552a45bf35e1249600b19a3eeb50")]
-[assembly: System.Reflection.AssemblyProductAttribute("MarkdownEditor")]
-[assembly: System.Reflection.AssemblyTitleAttribute("MarkdownEditor")]
+[assembly: System.Reflection.AssemblyProductAttribute("IconGenerator")]
+[assembly: System.Reflection.AssemblyTitleAttribute("IconGenerator")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
 [assembly: System.Runtime.Versioning.TargetPlatformAttribute("Windows7.0")]
 [assembly: System.Runtime.Versioning.SupportedOSPlatformAttribute("Windows7.0")]

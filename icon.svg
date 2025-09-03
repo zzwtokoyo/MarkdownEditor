@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="256" height="256" viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
+  <!-- 背景渐变 -->
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#4A90E2;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#357ABD;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="textGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFFFFF;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#F0F8FF;stop-opacity:1" />
+    </linearGradient>
+    <filter id="shadow">
+      <feDropShadow dx="2" dy="2" stdDeviation="3" flood-color="#000000" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+  
+  <!-- 圆角矩形背景 -->
+  <rect x="16" y="16" width="224" height="224" rx="32" ry="32" fill="url(#bgGradient)" filter="url(#shadow)"/>
+  
+  <!-- 文档背景 -->
+  <rect x="48" y="48" width="160" height="160" rx="8" ry="8" fill="#FFFFFF" opacity="0.95"/>
+  
+  <!-- Markdown M 标记 -->
+  <text x="128" y="140" font-family="Arial, sans-serif" font-size="72" font-weight="bold" 
+        text-anchor="middle" fill="url(#textGradient)" filter="url(#shadow)">M</text>
+  
+  <!-- 装饰性代码符号 -->
+  <text x="128" y="185" font-family="Consolas, monospace" font-size="24" font-weight="normal" 
+        text-anchor="middle" fill="#4A90E2" opacity="0.8">&lt;/&gt;</text>
+  
+  <!-- 小装饰点 -->
+  <circle cx="80" cy="80" r="3" fill="#4A90E2" opacity="0.6"/>
+  <circle cx="176" cy="80" r="3" fill="#4A90E2" opacity="0.6"/>
+  <circle cx="80" cy="176" r="3" fill="#4A90E2" opacity="0.6"/>
+  <circle cx="176" cy="176" r="3" fill="#4A90E2" opacity="0.6"/>
+  
+  <!-- Markdown语法装饰 -->
+  <text x="70" y="105" font-family="Consolas, monospace" font-size="12" fill="#666666" opacity="0.7">#</text>
+  <text x="180" y="105" font-family="Consolas, monospace" font-size="12" fill="#666666" opacity="0.7">**</text>
+  <text x="70" y="165" font-family="Consolas, monospace" font-size="12" fill="#666666" opacity="0.7">-</text>
+  <text x="180" y="165" font-family="Consolas, monospace" font-size="12" fill="#666666" opacity="0.7">`</text>
+</svg>
